@@ -118,7 +118,7 @@
             <div class="input-row">
                 <input type="text" id="name-in" placeholder="新英雄名稱" list="hero-history" onfocus="this.value=''">
                 <datalist id="hero-history"></datalist>
-                <button class="btn btn-gold" onclick="saveHero()">登錄/切換</button>
+                <button class="btn btn-gold" onclick="saveHero()">登錄</button>
             </div>
         </div>
 
@@ -268,11 +268,7 @@
                             <div class="tool-btn del-btn-style" onclick="deleteHero('${name}', event)">🗑️  </div>
                         </div>
 
-                        <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:8px; padding-right:110px;">
-                            <div style="font-size:1.1rem; font-weight:bold;">
-                                <span style="font-size:0.75rem; color:var(--gold); margin-right:6px; opacity:0.9;">${title}</span>
-                                <span>${isDead ? '👼 ' + name : name}</span>
-                            </div>
+                        
                             <span class="status-tag ${isDead ? 'tag-dead' : 'tag-alive'}">${isDead ? '等待復活' : '⚔️ 征戰中'}</span>
                         </div>
                         <div style="color:${isDead ? '#fff' : 'var(--success)'}; font-weight:bold;">威力值: $${data.total.toLocaleString()}</div>
