@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head> 
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>money-RPG</title>
     
     <link rel="icon" href="rpg-game.png" type="image/png">
@@ -13,71 +13,108 @@
     <style>
         :root {
             --gold: #ffd700; --bg: #0f0c29; --success: #00ff88;
-            --danger: #ff4d4d; --panel-bg: rgba(255, 255, 255, 0.08);
-            --select-glow: rgba(255, 215, 0, 0.5);
+            --danger: #ff4d4d; --panel-bg: rgba(255, 255, 255, 0.1);
+            --select-glow: rgba(255, 215, 0, 0.4);
         }
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        
+        * { 
+            box-sizing: border-box; 
+            -webkit-tap-highlight-color: transparent; 
+            user-select: none; /* 防止手機長按選取文字 */
+        }
         
         body {
             background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
             color: white; font-family: -apple-system, system-ui, sans-serif;
-            margin: 0; padding: 0; min-height: 100vh; 
+            margin: 0; padding: 0; 
+            min-height: 100dvh; /* 適應手機動態高度 */
             display: flex; flex-direction: column;
+            overflow-x: hidden;
         }
 
-        .container { width: 100%; max-width: 480px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; padding: 30px 15px; }
+        .container { 
+            width: 100%; 
+            max-width: 480px; 
+            margin: 0 auto; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 15px; 
+            padding: 20px 12px;
+            padding-bottom: 40px;
+        }
         
         .glass-box { 
-            background: var(--panel-bg); border-radius: 20px; border: 1px solid rgba(255,255,255,0.1); 
-            padding: 30px 15px 15px; position: relative; backdrop-filter: blur(10px);
+            background: var(--panel-bg); 
+            border-radius: 24px; 
+            border: 1px solid rgba(255,255,255,0.15); 
+            padding: 25px 15px 15px; 
+            position: relative; 
+            backdrop-filter: blur(15px);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
         }
         
         .box-title { 
-            font-size: 1.1rem; font-weight: 900; color: var(--gold); 
-            position: absolute; top: -16px; left: 50%; transform: translateX(-50%);
-            background: #1e1e3f; padding: 5px 25px; border-radius: 10px; 
-            border: 2px solid var(--gold); white-space: nowrap;
+            font-size: 0.95rem; font-weight: 900; color: var(--gold); 
+            position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
+            background: #1e1e3f; padding: 4px 20px; border-radius: 8px; 
+            border: 1.5px solid var(--gold); white-space: nowrap;
+            letter-spacing: 1px;
         }
 
-        .monster-selector { display: flex; justify-content: space-around; margin-bottom: 15px; }
-        .monster-opt { border: 2px solid transparent; border-radius: 12px; cursor: pointer; background: rgba(0,0,0,0.3); transition: 0.2s; padding: 5px; }
-        .monster-opt.selected { border-color: var(--gold); background: rgba(255,215,0,0.2); transform: scale(1.1); }
-        .monster-opt img { width: 45px; height: 45px; display: block; }
+        .monster-selector { display: flex; justify-content: space-around; margin-bottom: 12px; }
+        .monster-opt { 
+            border: 2px solid transparent; border-radius: 15px; cursor: pointer; 
+            background: rgba(0,0,0,0.3); transition: 0.2s; padding: 4px;
+        }
+        .monster-opt.selected { border-color: var(--gold); background: rgba(255,215,0,0.15); transform: scale(1.1); }
+        .monster-opt img { width: 42px; height: 42px; display: block; }
 
         .input-row { display: flex; gap: 8px; }
-        input { background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.2); padding: 12px; border-radius: 12px; color: white; flex: 1; outline: none; font-size: 1rem; text-align: center; }
-        
-        .btn { border: none; border-radius: 12px; font-weight: bold; cursor: pointer; padding: 0 20px; transition: 0.2s; }
-        .btn-gold { background: var(--gold); color: #000; }
-        .btn-attack { background: var(--danger); color: #fff; flex: 1; height: 50px; font-size: 1.2rem; }
-
-        .rank-item { 
-            margin-bottom: 25px; background: rgba(255,255,255,0.05); padding: 18px 15px; 
-            border-radius: 20px; cursor: pointer; border: 2px solid transparent; 
-            transition: all 0.3s ease; position: relative;
+        input { 
+            background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.2); 
+            padding: 14px; border-radius: 14px; color: white; flex: 1; 
+            outline: none; font-size: 1rem; text-align: center;
+            appearance: none;
         }
-        .is-active-target { border-color: var(--gold) !important; box-shadow: 0 0 15px var(--select-glow); background: rgba(255,215,0,0.1); }
-        .is-dead { filter: grayscale(100%); opacity: 0.7; }
+        input:focus { border-color: var(--gold); background: rgba(0,0,0,0.6); }
+
+        .btn { 
+            border: none; border-radius: 14px; font-weight: bold; cursor: pointer; 
+            padding: 0 18px; transition: transform 0.1s; 
+        }
+        .btn:active { transform: scale(0.95); } /* 按下時的回饋 */
+        
+        .btn-gold { background: var(--gold); color: #000; }
+        .btn-attack { background: var(--danger); color: #fff; flex: 1; height: 52px; font-size: 1.1rem; box-shadow: 0 4px 15px rgba(255, 77, 77, 0.3); }
+
+        /* 排行榜優化 */
+        .rank-item { 
+            margin-bottom: 15px; background: rgba(255,255,255,0.07); padding: 16px; 
+            border-radius: 20px; cursor: pointer; border: 1.5px solid transparent; 
+            transition: 0.3s; position: relative;
+        }
+        .is-active-target { border-color: var(--gold) !important; background: rgba(255,215,0,0.08); }
+        .is-dead { filter: grayscale(100%); opacity: 0.6; }
 
         .del-btn {
-            position: absolute; top: 12px; right: 12px;
-            background: rgba(255, 77, 77, 0.2); color: var(--danger);
-            border: 1px solid rgba(255, 77, 77, 0.3); border-radius: 8px;
-            padding: 4px 10px; font-size: 0.8rem; z-index: 20;
+            position: absolute; top: 10px; right: 10px;
+            background: rgba(255, 77, 77, 0.15); color: var(--danger);
+            border: 1px solid rgba(255, 77, 77, 0.2); border-radius: 8px;
+            padding: 4px 8px; font-size: 0.75rem; z-index: 10;
         }
 
-        .track { height: 35px; position: relative; margin: 35px 0 5px 0; background: rgba(0,0,0,0.4); border-radius: 17px; }
-        .progress-bar { position: absolute; top: 50%; left: 8px; right: 8px; height: 6px; background: #111; border-radius: 3px; transform: translateY(-50%); overflow: hidden; }
-        .progress-fill { height: 100%; transition: width 0.8s ease; }
+        .track { height: 32px; position: relative; margin: 30px 0 5px 0; background: rgba(0,0,0,0.4); border-radius: 16px; }
+        .progress-bar { position: absolute; top: 50%; left: 6px; right: 6px; height: 5px; background: #111; border-radius: 3px; transform: translateY(-50%); overflow: hidden; }
+        .progress-fill { height: 100%; transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1); }
 
-        .avatar-container { position: absolute; top: 50%; transform: translate(-50%, -50%); transition: left 0.8s; z-index: 10; }
-        .avatar { width: 36px; height: 36px; border-radius: 50%; border: 2px solid white; }
+        .avatar-container { position: absolute; top: 50%; transform: translate(-50%, -50%); transition: left 0.8s; z-index: 5; }
+        .avatar { width: 34px; height: 34px; border-radius: 50%; border: 1.5px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.5); }
 
         .fx-overlay { position: fixed; inset: 0; pointer-events: none; z-index: 1000; opacity: 0; }
         #fx-thunder { background: white; }
         #fx-heal { background: radial-gradient(circle, var(--success) 0%, transparent 70%); }
-        .active-fx { animation: flash-anim 0.5s ease-out; }
-        @keyframes flash-anim { 0% { opacity: 0.5; } 100% { opacity: 0; } }
+        .active-fx { animation: flash-anim 0.4s ease-out; }
+        @keyframes flash-anim { 0% { opacity: 0.4; } 100% { opacity: 0; } }
     </style>
 </head>
 <body>
@@ -95,29 +132,28 @@
                 <div class="monster-opt" onclick="pickM('monster4.png', this)"><img src="monster4.png"></div>
             </div>
             <div class="input-row">
-                <input type="text" id="name-in" placeholder="輸入名稱" list="hero-history" onfocus="this.value=''">
+                <input type="text" id="name-in" placeholder="新英雄名稱" list="hero-history" onfocus="this.value=''" autocomplete="off">
                 <datalist id="hero-history"></datalist>
-                <button class="btn btn-gold" onclick="saveHero()">登錄/切換</button>
+                <button class="btn btn-gold" onclick="saveHero()">登錄</button>
             </div>
         </div>
 
         <div class="glass-box" id="battle-box" style="opacity:0.3; pointer-events:none;">
-            <div class="box-title">⚔️ 戰鬥指揮部</div>
-            <div id="target-hint" style="text-align:center; margin-bottom:12px; color:var(--gold); font-weight:bold;">尚未鎖定英雄</div>
+            <div class="box-title">⚔️ 戰鬥指揮</div>
+            <div id="target-hint" style="text-align:center; margin-bottom:12px; color:var(--gold); font-size: 0.95rem; font-weight:bold;">尚未鎖定英雄</div>
             <div class="input-row">
                 <input type="number" id="val-in" placeholder="輸入威力值" inputmode="numeric">
                 <button class="btn btn-attack" onclick="doAttack()">發動</button>
             </div>
         </div>
 
-        <div class="rank-list" id="rank-box"></div>
+        <div id="rank-box"></div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, doc, getDoc, setDoc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-        // --- 使用你提供的配置 ---
         const firebaseConfig = {
             apiKey: "AIzaSyB1ZbRISZunnzBapdMk-VZiYbq2PFIU7Vw",
             authDomain: "mimi-healthy.firebaseapp.com",
@@ -163,12 +199,10 @@
         window.saveHero = async () => {
             const name = document.getElementById('name-in').value.trim();
             if(!name) return;
-
             if (currentPlayers[name]) {
-                alert(`⚠️ [${name}] 已存在，請直接點選卡片或從下拉選單選擇。`);
+                alert(`⚠️ [${name}] 已在場上，請從清單選擇。`);
                 return;
             }
-
             activeName = name;
             localStorage.setItem('active_hero', name);
             let p = { ...currentPlayers };
@@ -188,6 +222,7 @@
                 localStorage.removeItem('active_hero');
                 document.getElementById('battle-box').style.opacity = "0.3";
                 document.getElementById('battle-box').style.pointerEvents = "none";
+                document.getElementById('target-hint').innerText = `尚未鎖定英雄`;
             }
         };
 
@@ -200,6 +235,7 @@
             await updateDoc(mRef, { players: p });
             triggerFx(val > 0 ? 'fx-heal' : 'fx-thunder');
             valIn.value = '';
+            valIn.blur(); // 輸入完自動收起鍵盤
         };
 
         window.setTarget = (name) => {
@@ -237,9 +273,9 @@
                 return `
                     <div class="rank-item ${name === activeName ? 'is-active-target' : ''} ${isDead ? 'is-dead' : ''}" onclick="setTarget('${name}')">
                         <div class="del-btn" onclick="deleteHero('${name}', event)">🗑️</div>
-                        <div style="font-weight:bold; margin-bottom:10px;">
-                            ${isDead ? '👼 ' : ''}${name} 
-                            <span style="float:right; color:var(--success)">$${data.total.toLocaleString()}</span>
+                        <div style="font-weight:bold; font-size:1.05rem; display:flex; justify-content:space-between;">
+                            <span>${isDead ? '👼 ' : ''}${name}</span>
+                            <span style="color:var(--success)">$${data.total.toLocaleString()}</span>
                         </div>
                         <div class="track">
                             <div class="progress-bar"><div class="progress-fill" style="width:${pct}%; background:linear-gradient(90deg, #ff4d4d, #00ff88);"></div></div>
