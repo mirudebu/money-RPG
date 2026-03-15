@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head> 
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>money-RPG</title>
+    
+    <link rel="icon" href="rpg-game.png" type="image/png">
+    <link rel="apple-touch-icon" href="rpg-game.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="mobile-web-app-capable" content="yes">
+
+    <style>
+        :root {
+            --gold: #ffd700; --bg: #0f0c29; --success: #00ff88;
+            --danger: #ff4d4d; --panel-bg: rgba(255, 255, 255, 0.08);
+            --select-glow: rgba(255, 215, 0, 0.5);
+        }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        
+        body {
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            color: white; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            margin: 0; padding: 0; min-height: 100vh; 
+            overflow-y: auto; overflow-x: hidden;
+            display: flex; flex-direction: column;
+        }
+
+        /* 輸入框美化 */
+        input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        input[type=number] { -moz-appearance: textfield; }
+
+        .container { width: 100%; max-width: 480px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; padding: 30px 15px; }
+        
+        .glass-box { 
+            background: var(--panel-bg); border-radius: 20px; border: 1px solid rgba(255,255,255,0.1); 
+            padding: 30px 15px 15px; position: relative; backdrop-filter: blur(10px);
+            margin-bottom: 10px;
+        }
+        
+        .box-title { 
+            font-size: 1.1rem; font-weight: 900; color: var(--gold); 
+            position: absolute; top: -16px; left: 50%; transform: translateX(-50%);
+            background: #1e1e3f; padding: 5px 25px; border-radius: 10px; 
+            border: 2px solid var(--gold); white-space: nowrap; z-index: 10;
+        }
+
+        .monster-selector { display: flex; justify-content: space-around; margin-bottom: 15px; }
+        .monster-opt { border: 2px solid transparent; border-radius: 12px; cursor: pointer; background: rgba(0,0,0,0.3); transition: 0.2s; padding: 5px; }
+        .monster-opt.selected { border-color: var(--gold); background: rgba(255,215,0,0.2); transform: scale(1.1); }
+        .monster-opt img { width: 45px; height: 45px; display: block; }
+
+        .input-row { display: flex; gap: 8px; }
+        input { background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.2); padding: 12px; border-radius: 12px; color: white; flex: 1; outline: none; font-size: 1rem; text-align: center; }
+        input:focus { border-color: var(--gold); }
+        
+        .input-error { border-color: var(--danger) !important; animation: shake 0.3s; }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+
+        .btn { border: none; border-radius: 12px; font-weight: bold; cursor: pointer; padding: 0 20px; transition: 0.2s; }
+        .btn-gold { background: var(--gold); color: #000; }
+        .btn-attack { background: var(--danger); color: #fff; flex: 1; height: 50px; font-size: 1.2rem; }
+
+        /* 卡片清單 */
+        .rank-item { 
+            margin-bottom: 25px; background: rgba(255,255,255,0.05); padding: 18px 15px; 
+            border-radius: 20px; cursor: pointer; border: 2px solid transparent; 
+            transition: all 0.3s ease; position: relative;
+        }
+        .is-active-target { border-color: var(--gold) !important; box-shadow: 0 0 15px var(--select-glow); background: rgba(255,215,0,0.1); }
+        .is-dead { filter: grayscale(100%); opacity: 0.7; }
+
+        .del-btn {
+            position: absolute; top: 12px; right: 12px;
+            background: rgba(255, 77, 77, 0.2); color: var(--danger);
+            border: 1px solid rgba(255, 77, 77, 0.3); border-radius: 8px;
+            padding: 4px 10px; font-size: 0.8rem; z-index: 20;
+        }
+
+        .status-tag { font-size: 0.75rem; font-weight: bold; padding: 2px 8px; border-radius: 5px; display: inline-block; }
+        .tag-dead { background: #444; color: #eee; }
+        .tag-alive { background: var(--success); color: #000; }
+
+        /* 進度條系統 */
+        .track { height: 35px; position: relative; margin: 35px 0 5px 0; background: rgba(0,0,0,0.4); border-radius: 17px; }
+        .progress-bar { position: absolute; top: 50%; left: 8px; right: 8px; height: 6px; background: #111; border-radius: 3px; transform: translateY(-50%); overflow: hidden; }
+        .progress-fill { height: 100%; transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1); }
+
+        .boss-icon { position: absolute; top: -26px; font-size: 22px; transform: translateX(-50%); transition: 0.3s; z-index: 5; opacity: 0.5; }
+        .boss-icon.active { opacity: 1; }
+        .boss-icon.crown-final.reached { filter: drop-shadow(0 0 10px var(--gold)); opacity: 1; scale: 1.3; }
+
+        .avatar-container { position: absolute; top: 50%; transform: translate(-50%, -50%); transition: left 0.8s cubic-bezier(0.4, 0, 0.2, 1); z-index: 10; }
+        .avatar { width: 36px; height: 36px; display: block; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 10px rgba(0,0,0,0.5); }
+
+        /* 特效層 */
+        .fx-overlay { position: fixed; inset: 0; pointer-events: none; z-index: 1000; opacity: 0; }
+        #fx-thunder { background: white; }
+        #fx-heal { background: radial-gradient(circle, var(--success) 0%, transparent 70%); }
+        .active-fx { animation: flash-anim 0.5s ease-out; }
+        @keyframes flash-anim { 0% { opacity: 0.5; } 100% { opacity: 0; } }
+    </style>
+</head>
+<body>
+
+    <div id="fx-thunder" class="fx-overlay"></div>
+    <div id="fx-heal" class="fx-overlay"></div>
+
+    <div class="container">
+        <div class="glass-box">
+            <div class="box-title">🏆 英雄殿堂</div>
+            <div class="monster-selector">
+                <div class="monster-opt selected" onclick="pickM('monster1.png', this)"><img src="monster1.png"></div>
+                <div class="monster-opt" onclick="pickM('monster2.png', this)"><img src="monster2.png"></div>
+                <div class="monster-opt" onclick="pickM('monster3.png', this)"><img src="monster3.png"></div>
+                <div class="monster-opt" onclick="pickM('monster4.png', this)"><img src="monster4.png"></div>
+            </div>
+            <div class="input-row">
+                <input type="text" id="name-in" placeholder="新英雄名稱或選擇" list="hero-history" onfocus="this.value=''">
+                <datalist id="hero-history"></datalist>
+                <button class="btn btn-gold" onclick="saveHero()">登錄/切換</button>
+            </div>
+        </div>
+
+        <div class="glass-box" id="battle-box" style="opacity:0.3; pointer-events:none; transition: 0.3s;">
+            <div class="box-title">⚔️ 戰鬥指揮部</div>
+            <div id="target-hint" style="font-size:1.1rem; color:var(--gold); margin-bottom:12px; text-align:center; font-weight:bold;">尚未鎖定英雄</div>
+            <div class="input-row">
+                <input type="number" id="val-in" placeholder="輸入威力值" inputmode="numeric">
+                <button class="btn btn-attack" onclick="doAttack()">發動</button>
+            </div>
+        </div>
+
+        <div class="rank-list" id="rank-box"></div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, doc, getDoc, setDoc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyB1ZbRISZunnzBapdMk-VZiYbq2PFIU7Vw",
+            authDomain: "mimi-healthy.firebaseapp.com",
+            projectId: "mimi-healthy",
+            appId: "1:550078016256:web:23bf5effdbb337def7a1e5"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const mRef = doc(db, "savings", "money-RPG");
+
+        let curImg = 'monster1.png';
+        let activeName = '';
+        let currentPlayers = {};
+        const GOAL = 100000;
+
+        function init() {
+            onSnapshot(mRef, (s) => { 
+                if(s.exists()) {
+                    currentPlayers = s.data().players || {};
+                    render(currentPlayers);
+                    updateDatalist(currentPlayers);
+                }
+            });
+            const saved = localStorage.getItem('hero_moneyRPG_v2');
+            if(saved) { activeName = saved; document.getElementById('name-in').value = saved; unlock(); }
+        }
+
+        function updateDatalist(players) {
+            const list = document.getElementById('hero-history');
+            list.innerHTML = Object.keys(players).map(name => `<option value="${name}">`).join('');
+        }
+
+        window.pickM = (img, el) => {
+            curImg = img;
+            document.querySelectorAll('.monster-opt').forEach(o => o.classList.remove('selected'));
+            el.classList.add('selected');
+        };
+
+        window.saveHero = async () => {
+            const nameIn = document.getElementById('name-in');
+            const name = nameIn.value.trim();
+            if(!name) return;
+
+            // 嚴謹的重複檢核
+            if (currentPlayers[name]) {
+                alert(`⚠️ [${name}] 已經在英雄榜中了！\n請直接從下拉選單選擇，或點擊下方的卡片鎖定。`);
+                nameIn.classList.add('input-error');
+                setTimeout(() => nameIn.classList.remove('input-error'), 1000);
+                return;
+            }
+
+            activeName = name;
+            localStorage.setItem('hero_moneyRPG_v2', name);
+            
+            let p = { ...currentPlayers };
+            p[name] = { img: curImg, total: 0 };
+            
+            await setDoc(mRef, { players: p });
+            unlock();
+        };
+
+        window.deleteHero = async (name, event) => {
+            event.stopPropagation();
+            if(!confirm(`確定要將英雄 [${name}] 從 RPG 中永久刪除嗎？`)) return;
+            
+            let p = { ...currentPlayers };
+            delete p[name];
+            await setDoc(mRef, { players: p });
+
+            if(activeName === name) {
+                activeName = '';
+                localStorage.removeItem('hero_moneyRPG_v2');
+                document.getElementById('name-in').value = '';
+                document.getElementById('battle-box').style.opacity = "0.3";
+                document.getElementById('battle-box').style.pointerEvents = "none";
+                document.getElementById('target-hint').innerText = `尚未鎖定英雄`;
+            }
+        };
+
+        window.doAttack = async () => {
+            const valIn = document.getElementById('val-in');
+            const val = parseFloat(valIn.value);
+            if(isNaN(val) || !activeName) return;
+
+            let p = { ...currentPlayers };
+            p[activeName].total += val;
+            
+            await updateDoc(mRef, { players: p });
+            triggerFx(val > 0 ? 'fx-heal' : 'fx-thunder');
+            valIn.value = '';
+        };
+
+        window.setTarget = (name) => {
+            activeName = name;
+            document.getElementById('name-in').value = name;
+            unlock();
+            render(currentPlayers);
+        };
+
+        function unlock() {
+            document.getElementById('battle-box').style.opacity = "1";
+            document.getElementById('battle-box').style.pointerEvents = "auto";
+            document.getElementById('target-hint').innerText = `🎯 鎖定：${activeName}`;
+        }
+
+        function triggerFx(id) {
+            const el = document.getElementById(id);
+            el.classList.remove('active-fx');
+            void el.offsetWidth;
+            el.classList.add('active-fx');
+        }
+
+        function render(players) {
+            const box = document.getElementById('rank-box');
+            // 排序邏輯：1. 鎖定英雄置頂 2. 分數由高到低
+            const sorted = Object.entries(players).sort((a, b) => {
+                if (a[0] === activeName) return -1;
+                if (b[0] === activeName) return 1;
+                return b[1].total - a[1].total;
+            });
+
+            box.innerHTML = sorted.map(([name, data]) => {
+                const pct = Math.max(0, Math.min((data.total / GOAL) * 100, 100));
+                const isDead = data.total < 0;
+                let title = pct >= 100 ? "🌟 傳說級冠冕" : (pct >= 60 ? "🔥 屠龍勇士" : (pct >= 30 ? "👻 幽靈獵手" : "初級冒險者"));
+                
+                return `
+                    <div class="rank-item ${name === activeName ? 'is-active-target' : ''} ${isDead ? 'is-dead' : ''}" onclick="setTarget('${name}')">
+                        <div class="del-btn" onclick="deleteHero('${name}', event)">🗑️ 刪除</div>
+                        <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:10px; padding-right:60px;">
+                            <div style="font-size:1.1rem; font-weight:bold;">
+                                <span style="font-size:0.75rem; color:var(--gold); margin-right:8px; opacity:0.8;">${title}</span>
+                                <span>${isDead ? '👼 ' + name : name}</span>
+                            </div>
+                            <span class="status-tag ${isDead ? 'tag-dead' : 'tag-alive'}">${isDead ? '等待復活' : '⚔️ 征戰中'}</span>
+                        </div>
+                        <div style="color:${isDead ? '#aaa' : 'var(--success)'}; font-size:1rem; font-weight:900;">威力值: $${data.total.toLocaleString()}</div>
+                        <div class="track">
+                            <span class="boss-icon ${pct>=30?'active':''}" style="left:30%;">👻</span>
+                            <span class="boss-icon ${pct>=60?'active':''}" style="left:60%;">🐉</span>
+                            <span class="boss-icon crown-final ${pct>=100 ? 'reached' : ''}" style="left:100%;">👑</span>
+                            <div class="progress-bar"><div class="progress-fill" style="width:${pct}%; background:linear-gradient(90deg, #ff4d4d, #00ff88);"></div></div>
+                            <div class="avatar-container" style="left:${pct}%">
+                                <img src="${data.img}" class="avatar">
+                            </div>
+                        </div>
+                    </div>`;
+            }).join('');
+        }
+        init();
+    </script>
+</body>
+</html>
