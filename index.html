@@ -267,7 +267,11 @@
                             <div class="tool-btn reset-btn-style" onclick="resetHero('${name}', event)">🔄 </div>
                             <div class="tool-btn del-btn-style" onclick="deleteHero('${name}', event)">🗑️  </div>
                         </div>
-
+ <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:8px; padding-right:110px;">
+                            <div style="font-size:1.1rem; font-weight:bold;">
+                                <span style="font-size:0.75rem; color:var(--gold); margin-right:6px; opacity:0.9;">${title}</span>
+                                
+                            </div>
                         
                             <span class="status-tag ${isDead ? 'tag-dead' : 'tag-alive'}">${isDead ? '等待復活' : '⚔️ 征戰中'}</span>
                         </div>
