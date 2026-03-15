@@ -28,25 +28,22 @@
 
         /* 移除 number 輸入框的上下箭頭 */
         input::-webkit-outer-spin-button,
-        input::-webkit-inner-spin-button {
-            -webkit-appearance: none;
-            margin: 0;
-        }
-        input[type=number] {
-            -moz-appearance: textfield;
-        }
+        input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        input[type=number] { -moz-appearance: textfield; }
 
-        /* --- 浮動文字文字特效 --- */
+        /* --- 浮動文字文字特效 (停留 3 秒) --- */
         .floating-msg {
             position: fixed; top: 45%; left: 50%; transform: translate(-50%, -50%);
             z-index: 2000; text-align: center; font-weight: 900; pointer-events: none;
             text-shadow: 0 0 15px rgba(0,0,0,1); line-height: 1.3;
-            animation: floatUp 1.5s cubic-bezier(0.18, 0.89, 0.32, 1.28) forwards;
+            animation: floatUpSlow 1.5s cubic-bezier(0.18, 0.89, 0.32, 1.28) forwards;
         }
-        @keyframes floatUp {
+
+        @keyframes floatUpSlow {
             0% { transform: translate(-50%, 0%) scale(0.3); opacity: 0; }
-            30% { transform: translate(-50%, -50%) scale(1.3); opacity: 1; }
-            100% { transform: translate(-50%, -100%) scale(1); opacity: 0; }
+            10% { transform: translate(-50%, -50%) scale(1.3); opacity: 1; }
+            80% { transform: translate(-50%, -70%) scale(1); opacity: 1; }
+            100% { transform: translate(-50%, -120%) scale(0.8); opacity: 0; }
         }
 
         /* --- 背景特效層 --- */
@@ -125,7 +122,7 @@
             <div class="input-row">
                 <input type="text" id="name-in" placeholder="新英雄名稱" list="hero-history" onfocus="this.value=''">
                 <datalist id="hero-history"></datalist>
-                <button class="btn btn-gold" onclick="saveHero()">登錄</button>
+                <button class="btn btn-gold" onclick="saveHero()">登錄/切換</button>
             </div>
         </div>
 
@@ -133,7 +130,7 @@
             <div class="box-title">⚔️ 戰鬥指揮部</div>
             <div id="target-hint" style="font-size:1.1rem; color:var(--gold); margin-bottom:12px; text-align:center; font-weight:bold;">尚未鎖定英雄</div>
             <div class="input-row">
-                <input type="number" id="val-in" placeholder="威力值" inputmode="numeric">
+                <input type="number" id="val-in" placeholder="威力值" inputmode="decimal">
                 <button class="btn btn-attack" onclick="doAttack()">發動</button>
             </div>
         </div>
@@ -174,7 +171,7 @@
             document.body.appendChild(msg);
             
             triggerFx(v > 0 ? 'fx-heal' : 'fx-thunder');
-            setTimeout(() => msg.remove(), 800);
+            setTimeout(() => msg.remove(), 3000);
         }
 
         function triggerFx(id) {
