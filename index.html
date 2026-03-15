@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head> 
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>money-RPG</title>
     
     <link rel="icon" href="rpg-game.png" type="image/png">
@@ -16,7 +16,6 @@
             --gold: #ffd700; --bg: #0f0c29; --success: #00ff88;
             --danger: #ff4d4d; --panel-bg: rgba(255, 255, 255, 0.08);
             --select-glow: rgba(255, 215, 0, 0.5);
-            --rebirth: #00ffff;
         }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         
@@ -27,15 +26,37 @@
             display: flex; flex-direction: column;
         }
 
-        input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-        input[type=number] { -moz-appearance: textfield; }
+        /* 移除 number 輸入框的上下箭頭 */
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
 
+        /* --- 浮動文字文字特效 --- */
+        .floating-msg {
+            position: fixed; top: 45%; left: 50%; transform: translate(-50%, -50%);
+            z-index: 2000; text-align: center; font-weight: 900; pointer-events: none;
+            text-shadow: 0 0 15px rgba(0,0,0,1); line-height: 1.3;
+            animation: floatUp 1.5s cubic-bezier(0.18, 0.89, 0.32, 1.28) forwards;
+        }
+        @keyframes floatUp {
+            0% { transform: translate(-50%, 0%) scale(0.3); opacity: 0; }
+            30% { transform: translate(-50%, -50%) scale(1.3); opacity: 1; }
+            100% { transform: translate(-50%, -100%) scale(1); opacity: 0; }
+        }
+
+        /* --- 背景特效層 --- */
         .fx-overlay { position: fixed; inset: 0; pointer-events: none; z-index: 1000; opacity: 0; }
         #fx-thunder { background: white; }
         #fx-heal { background: radial-gradient(circle, var(--success) 0%, transparent 70%); }
         .active-fx { animation: flash-anim 0.6s ease-out; }
         @keyframes flash-anim { 0% { opacity: 0.6; } 100% { opacity: 0; } }
 
+        /* --- UI 佈局 --- */
         .container { width: 100%; max-width: 480px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; padding: 30px 15px; }
         
         .glass-box { 
@@ -59,30 +80,21 @@
         .input-row { display: flex; gap: 8px; }
         input { background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.2); padding: 12px; border-radius: 12px; color: white; flex: 1; outline: none; font-size: 1rem; text-align: center; }
         
-        .input-error { border-color: var(--danger) !important; animation: shake 0.3s; }
-        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
-
         .btn { border: none; border-radius: 12px; font-weight: bold; cursor: pointer; padding: 0 20px; transition: 0.2s; }
         .btn-gold { background: var(--gold); color: #000; }
         .btn-attack { background: var(--danger); color: #fff; flex: 1; height: 50px; font-size: 1.2rem; }
 
+        /* --- 排名清單 --- */
         .rank-list { width: 100%; }
         .rank-item { 
             margin-bottom: 25px; background: rgba(255,255,255,0.05); padding: 15px; 
             border-radius: 18px; cursor: pointer; border: 2px solid transparent; 
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
-            position: relative;
+            transition: all 0.4s; position: relative;
         }
         .is-active-target { border-color: var(--gold) !important; box-shadow: 0 0 15px var(--select-glow); background: rgba(255,215,0,0.1); }
         .is-dead { filter: grayscale(100%); opacity: 0.7; }
 
-        .del-btn {
-            position: absolute; top: 12px; right: 12px;
-            background: rgba(255, 77, 77, 0.2); color: var(--danger);
-            border: 1px solid rgba(255, 77, 77, 0.3); border-radius: 8px;
-            padding: 4px 8px; font-size: 0.75rem; font-weight: bold;
-            z-index: 20;
-        }
+        .del-btn { position: absolute; top: 12px; right: 12px; background: rgba(255, 77, 77, 0.2); color: var(--danger); border: 1px solid rgba(255, 77, 77, 0.3); border-radius: 8px; padding: 4px 8px; font-size: 0.75rem; z-index: 20; }
 
         .status-tag { font-size: 0.75rem; font-weight: bold; padding: 2px 8px; border-radius: 5px; display: inline-block; }
         .tag-dead { background: #333; color: #fff; }
@@ -91,12 +103,9 @@
         .track { height: 35px; position: relative; margin: 35px 0 5px 0; background: rgba(0,0,0,0.3); border-radius: 17px; }
         .progress-bar { position: absolute; top: 50%; left: 8px; right: 8px; height: 6px; background: #111; border-radius: 3px; transform: translateY(-50%); overflow: hidden; }
         .progress-fill { height: 100%; transition: width 0.8s ease-out; }
-
-        .boss-icon { position: absolute; top: -26px; font-size: 22px; transform: translateX(-50%); transition: 0.3s; z-index: 5; }
-        .boss-icon.crown-final.reached { filter: drop-shadow(0 0 12px var(--gold)); opacity: 1 !important; }
-
         .avatar-container { position: absolute; top: 50%; transform: translate(-50%, -50%); transition: left 0.8s; z-index: 10; }
-        .avatar { width: 34px; height: 34px; display: block; border-radius: 50%; }
+        .avatar { width: 34px; height: 34px; border-radius: 50%; }
+        .boss-icon { position: absolute; top: -26px; font-size: 22px; transform: translateX(-50%); transition: 0.3s; z-index: 5; }
     </style>
 </head>
 <body>
@@ -145,8 +154,6 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
-        
-        // --- 路徑維持：money-RPG ---
         const mRef = doc(db, "savings", "money-RPG");
 
         let curImg = 'monster1.png';
@@ -154,10 +161,33 @@
         let currentPlayers = {};
         const GOAL = 100000;
 
+        function showMsg(v) {
+            const a = Math.abs(v);
+            let head = v > 0 ? (a >= 10000 ? "爆裂攻擊" : "命中目標") : "致命雷擊";
+            let color = v > 0 ? (a >= 10000 ? "#f90" : "#ff0") : "#fff";
+            
+            const msg = document.createElement('div');
+            msg.className = 'floating-msg';
+            msg.style.color = color;
+            msg.style.fontSize = a >= 10000 ? '2.5rem' : '1.8rem';
+            msg.innerHTML = `${head}<br>${v > 0 ? '+' : ''}${v.toLocaleString()}`;
+            document.body.appendChild(msg);
+            
+            triggerFx(v > 0 ? 'fx-heal' : 'fx-thunder');
+            setTimeout(() => msg.remove(), 800);
+        }
+
+        function triggerFx(id) {
+            const el = document.getElementById(id);
+            el.classList.remove('active-fx');
+            void el.offsetWidth;
+            el.classList.add('active-fx');
+        }
+
         function init() {
             onSnapshot(mRef, (s) => { 
                 if(s.exists()) {
-                    currentPlayers = s.data().players;
+                    currentPlayers = s.data().players || {};
                     render(currentPlayers);
                     updateDatalist(currentPlayers);
                 }
@@ -178,24 +208,12 @@
         };
 
         window.saveHero = async () => {
-            const nameIn = document.getElementById('name-in');
-            const name = nameIn.value.trim();
+            const name = document.getElementById('name-in').value.trim();
             if(!name) return;
-
-            // 重複名稱檢查
-            if (currentPlayers[name]) {
-                alert(`⚠️ 英雄 [${name}] 已在場上，請從清單選擇或輸入新名字。`);
-                nameIn.classList.add('input-error');
-                setTimeout(() => nameIn.classList.remove('input-error'), 1000);
-                return;
-            }
-
             activeName = name;
             localStorage.setItem('hero_moneyRPG', name);
-            
             let p = { ...currentPlayers };
-            p[name] = { img: curImg, total: 0 };
-            
+            if(!p[name]) p[name] = { img: curImg, total: 0 };
             await setDoc(mRef, { players: p });
             unlock();
         };
@@ -203,35 +221,36 @@
         window.deleteHero = async (name, event) => {
             event.stopPropagation();
             if(!confirm(`確定要刪除英雄 [${name}] 嗎？`)) return;
-            const s = await getDoc(mRef);
-            if(s.exists()){
-                let p = s.data().players;
-                delete p[name];
-                await setDoc(mRef, {players: p});
-                if(activeName === name) {
-                    activeName = '';
-                    localStorage.removeItem('hero_moneyRPG');
-                    document.getElementById('name-in').value = '';
-                    document.getElementById('battle-box').style.opacity = "0.3";
-                    document.getElementById('battle-box').style.pointerEvents = "none";
-                }
+            let p = { ...currentPlayers };
+            delete p[name];
+            await setDoc(mRef, {players: p});
+            if(activeName === name) {
+                activeName = '';
+                localStorage.removeItem('hero_moneyRPG');
+                document.getElementById('battle-box').style.opacity = "0.3";
+                document.getElementById('battle-box').style.pointerEvents = "none";
             }
         };
 
         window.doAttack = async () => {
-            const val = parseFloat(document.getElementById('val-in').value);
+            const input = document.getElementById('val-in');
+            const val = parseFloat(input.value);
             if(isNaN(val) || !activeName) return;
+
             const s = await getDoc(mRef);
             let p = s.data().players;
             p[activeName].total += val;
             await updateDoc(mRef, {players: p});
-            triggerFx(val > 0 ? 'fx-heal' : 'fx-thunder');
-            document.getElementById('val-in').value = '';
+            
+            showMsg(val);
+            input.value = '';
+            input.blur(); 
         };
 
         window.setTarget = (name) => {
             activeName = name;
             document.getElementById('name-in').value = name;
+            localStorage.setItem('hero_moneyRPG', name);
             unlock();
             render(currentPlayers);
         };
@@ -242,20 +261,9 @@
             document.getElementById('target-hint').innerText = `🎯 鎖定：${activeName}`;
         }
 
-        function triggerFx(id) {
-            const el = document.getElementById(id);
-            el.classList.remove('active-fx');
-            void el.offsetWidth;
-            el.classList.add('active-fx');
-        }
-
         function render(players) {
             const box = document.getElementById('rank-box');
-            const sorted = Object.entries(players).sort((a, b) => {
-                if (a[0] === activeName) return -1;
-                if (b[0] === activeName) return 1;
-                return b[1].total - a[1].total;
-            });
+            const sorted = Object.entries(players).sort((a, b) => b[1].total - a[1].total);
 
             box.innerHTML = sorted.map(([name, data]) => {
                 const pct = Math.max(0, Math.min((data.total / GOAL) * 100, 100));
@@ -276,11 +284,9 @@
                         <div class="track">
                             <span class="boss-icon" style="left:30%; opacity:${pct>=30?0.2:1}">👻</span>
                             <span class="boss-icon" style="left:60%; opacity:${pct>=60?0.2:1}">🐉</span>
-                            <span class="boss-icon crown-final ${pct>=100 ? 'reached' : ''}" style="left:100%; opacity:${pct>=100?1:0.6}">👑</span>
+                            <span class="boss-icon" style="left:100%; opacity:${pct>=100?1:0.6}">👑</span>
                             <div class="progress-bar"><div class="progress-fill" style="width:${pct}%; background:linear-gradient(90deg, #ff4d4d, #00ff88);"></div></div>
-                            <div class="avatar-container" style="left:${pct}%">
-                                <img src="${data.img}" class="avatar">
-                            </div>
+                            <div class="avatar-container" style="left:${pct}%"><img src="${data.img}" class="avatar"></div>
                         </div>
                     </div>`;
             }).join('');
