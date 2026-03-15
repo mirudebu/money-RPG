@@ -7,7 +7,7 @@
     <style>
         :root {
             --gold: #ffd700; --bg: #0f0c29; --success: #00ff88;
-            --danger: #ff4d4d; --panel-bg: rgba(255, 255, 255, 0.08);
+            --danger: #ff4d4d; --info: #4da6ff; --panel-bg: rgba(255, 255, 255, 0.08);
             --select-glow: rgba(255, 215, 0, 0.5);
         }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -18,7 +18,7 @@
             display: flex; flex-direction: column;
         }
 
-        /* --- 浮動文字文字特效 (停留 3 秒) --- */
+        /* --- 浮動文字特效 --- */
         .floating-msg {
             position: fixed; top: 45%; left: 50%; transform: translate(-50%, -50%);
             z-index: 2000; text-align: center; font-weight: 900; pointer-events: none;
@@ -60,18 +60,39 @@
         .btn-gold { background: var(--gold); color: #000; }
         .btn-attack { background: var(--danger); color: #fff; flex: 1; height: 50px; font-size: 1.2rem; }
 
-        .rank-list { width: 100%; }
+        /* --- 排名清單 --- */
+        .rank-list { width: 100%; display: flex; flex-direction: column; }
         .rank-item { 
             margin-bottom: 25px; background: rgba(255,255,255,0.05); padding: 15px; 
             border-radius: 18px; cursor: pointer; border: 2px solid transparent; 
-            transition: all 0.4s; position: relative;
+            transition: all 0.5s ease; position: relative;
         }
         .is-active-target { border-color: var(--gold) !important; box-shadow: 0 0 15px var(--select-glow); background: rgba(255,215,0,0.1); }
         .is-dead { filter: grayscale(100%); opacity: 0.7; }
-        .del-btn { position: absolute; top: 12px; right: 12px; background: rgba(255, 77, 77, 0.2); color: var(--danger); border: 1px solid rgba(255, 77, 77, 0.3); border-radius: 8px; padding: 4px 8px; font-size: 0.75rem; z-index: 20; }
-        .status-tag { font-size: 0.75rem; font-weight: bold; padding: 2px 8px; border-radius: 5px; display: inline-block; }
+        
+        /* --- 功能按鈕統一化：歸零 & 刪除 --- */
+        .action-btns { position: absolute; top: 12px; right: 12px; display: flex; gap: 6px; z-index: 20; }
+        
+        /* 統一按鈕基礎樣式 */
+        .tool-btn { 
+            border-radius: 8px; padding: 4px 8px; font-size: 0.75rem; font-weight: bold; 
+            cursor: pointer; border: 1px solid transparent; transition: 0.2s;
+        }
+        /* 刪除按鈕樣式 */
+        .del-btn-style { 
+            background: rgba(255, 77, 77, 0.15); color: var(--danger); 
+            border-color: rgba(255, 77, 77, 0.3); 
+        }
+        /* 歸零按鈕樣式 (對齊刪除按鈕風格) */
+        .reset-btn-style { 
+            background: rgba(77, 166, 255, 0.15); color: var(--info); 
+            border-color: rgba(77, 166, 255, 0.3); 
+        }
+        
+        .status-tag { font-size: 0.75rem; font-weight: bold; padding: 3px 8px; border-radius: 5px; display: inline-block; }
         .tag-dead { background: #333; color: #fff; }
         .tag-alive { background: var(--success); color: #000; }
+
         .track { height: 35px; position: relative; margin: 35px 0 5px 0; background: rgba(0,0,0,0.3); border-radius: 17px; }
         .progress-bar { position: absolute; top: 50%; left: 8px; right: 8px; height: 6px; background: #111; border-radius: 3px; transform: translateY(-50%); overflow: hidden; }
         .progress-fill { height: 100%; transition: width 0.8s ease-out; }
@@ -133,7 +154,7 @@
 
         function showMsg(v) {
             const a = Math.abs(v);
-            let head = v > 0 ? (a >= 10000 ? "爆裂攻擊" : "命中目標") : "致命雷擊";
+            let head = v > 0 ? (a >= 10000 ? "爆裂攻擊" : "命中目標") : (v < 0 ? "致命雷擊" : "數值歸零");
             let color = v > 0 ? (a >= 10000 ? "#f90" : "#ff0") : "#fff";
             const msg = document.createElement('div');
             msg.className = 'floating-msg';
@@ -194,16 +215,25 @@
             await setDoc(mRef, {players: p});
         };
 
+        window.resetHero = async (name, event) => {
+            event.stopPropagation();
+            if(!confirm(`確定要將 [${name}] 的威力值歸零嗎？`)) return;
+            let p = { ...currentPlayers };
+            if(p[name]) {
+                p[name].total = 0;
+                await updateDoc(mRef, {players: p});
+                showMsg(0);
+            }
+        };
+
         window.doAttack = async () => {
             const input = document.getElementById('val-in');
-            const val = parseFloat(input.value); // 解析為數字
+            const val = parseFloat(input.value);
             if(isNaN(val) || !activeName) return;
-
             const s = await getDoc(mRef);
             let p = s.data().players;
             p[activeName].total += val;
             await updateDoc(mRef, {players: p});
-            
             showMsg(val);
             input.value = '';
             input.blur(); 
@@ -226,14 +256,19 @@
         function render(players) {
             const box = document.getElementById('rank-box');
             const sorted = Object.entries(players).sort((a, b) => b[1].total - a[1].total);
+            
             box.innerHTML = sorted.map(([name, data]) => {
                 const pct = Math.max(0, Math.min((data.total / GOAL) * 100, 100));
                 const isDead = data.total < 0;
                 let title = pct >= 100 ? "🌟 傳說級冠冕" : (pct >= 60 ? "🔥 屠龍勇士" : (pct >= 30 ? "👻 幽靈獵手" : "初級冒險者"));
                 return `
                     <div class="rank-item ${name === activeName ? 'is-active-target' : ''} ${isDead ? 'is-dead' : ''}" onclick="setTarget('${name}')">
-                        <div class="del-btn" onclick="deleteHero('${name}', event)">🗑️</div>
-                        <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:8px; padding-right:45px;">
+                        <div class="action-btns">
+                            <div class="tool-btn reset-btn-style" onclick="resetHero('${name}', event)">🔄 </div>
+                            <div class="tool-btn del-btn-style" onclick="deleteHero('${name}', event)">🗑️  </div>
+                        </div>
+
+                        <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:8px; padding-right:110px;">
                             <div style="font-size:1.1rem; font-weight:bold;">
                                 <span style="font-size:0.75rem; color:var(--gold); margin-right:6px; opacity:0.9;">${title}</span>
                                 <span>${isDead ? '👼 ' + name : name}</span>
