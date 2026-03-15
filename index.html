@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Teal Dream 健康日誌</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <nav class="tab-bar">
+        <button class="tab-btn active" onclick="showPage('record', this)">今日紀錄</button>
+        <button class="tab-btn" onclick="showPage('history', this)">歷史回顧</button>
+    </nav>
+
+    <main id="recordPage" class="page active">
+        <h2 id="currentDateDisplay"></h2>
+
+        <section class="card water-card">
+            <div class="card-header"><span>🥛</span> 飲水紀錄</div>
+            <div class="glass-section">
+                <div class="glass-container">
+                    <div class="glass-water" id="waterLevel"><div class="wave"></div></div>
+                </div>
+                <div class="water-stats">
+                    <span class="current-ml" id="waterValue">0</span>
+                    <span class="target-ml">/ 2000 ml</span>
+                </div>
+            </div>
+            <div class="water-controls">
+                <button class="water-btn btn-blue" onclick="addWater(250)">🥤 +250ml</button>
+                <button class="water-btn btn-cream" onclick="addWater(500)">🍼 +500ml</button>
+                <div class="btn-reset-wrap">
+                    <button class="btn-reset" onclick="resetWater()">🔄 重置今日紀錄</button>
+                </div>
+            </div>
+        </section>
+
+        <section class="card">
+            <div class="card-header"><span>🚽</span> 排便狀況</div>
+            <div class="option-grid four-cols">
+                <input type="radio" name="poop" value="完美" id="p1"><label for="p1">✨<br>完美</label>
+                <input type="radio" name="poop" value="偏硬" id="p2"><label for="p2">🌰<br>偏硬</label>
+                <input type="radio" name="poop" value="偏軟" id="p3"><label for="p3">🍦<br>偏軟</label>
+                <input type="radio" name="poop" value="沒去" id="p4" checked><label for="p4">✕<br>沒去</label>
+            </div>
+        </section>
+
+        <section class="card">
+            <div class="card-header"><span>🏃‍♀️</span> 今日運動</div>
+            <div class="option-grid two-cols">
+                <input type="radio" name="exercise" value="有運動" id="ex1"><label for="ex1">💪 有運動</label>
+                <input type="radio" name="exercise" value="沒運動" id="ex2" checked><label for="ex2">☕ 沒運動</label>
+            </div>
+        </section>
+
+        <section class="card">
+            <div class="card-header"><span>🎭</span> 心情點滴</div>
+            <div class="mood-container">
+                <input type="radio" name="mood" value="😊" id="m1" checked><label for="m1">😊</label>
+                <input type="radio" name="mood" value="😡" id="m2"><label for="m2">😡</label>
+                <input type="radio" name="mood" value="😢" id="m3"><label for="m3">😢</label>
+                <input type="radio" name="mood" value="😆" id="m4"><label for="m4">😆</label>
+            </div>
+            <textarea id="moodNote" placeholder="今天心情如何？"></textarea>
+        </section>
+
+        <button class="save-btn" onclick="saveData()">紀錄這一天 ✨</button>
+    </main>
+
+    <main id="historyPage" class="page">
+        <div class="calendar-nav">
+            <button onclick="changeMonth(-1)">◀</button>
+            <h3 id="monthTitle"></h3>
+            <button onclick="changeMonth(1)">▶</button>
+        </div>
+        <div class="calendar-week-header">
+            <span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span>
+        </div>
+        <div id="calendarGrid" class="calendar-grid"></div>
+        <div id="selectedDetail" class="detail-card" style="display:none;"></div>
+    </main>
+
+    <script src="app.js"></script>
+</body>
+</html>
